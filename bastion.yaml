@@ -66,12 +66,22 @@ Resources:
       RouteTableId: !Ref RouteTable
       SubnetId: !Ref Subnet10
   BastionInstance:
+  # Incident Response Playbook
+  # 1. Create automated alerts that display unusual behaviors from host.
+  # 2. Isolate host from network traffic if there is a threat.
+  # To do this- moify the 'SecurityGroups' property below to replace the current
+  # security group with the 'IsolatedSecurityGroup', remove '- !Ref InboundAccessSecurityGroup'
+  # and replace it with '- !Ref IsolatedSecurityGroup'
+  # 3. Perserve logs for evidence.
+  # 4. Anaylze logs.
+  # 5. Delete the instance, ensure SSH keyfairs are updated.
     Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: !Ref AvailabilityZone
       ImageId: !Ref LatestAmiId
       InstanceType:
         !FindInMap [EnvironmentTypeToInstanceType, !Ref EnvironmentType, InstanceType]
+      # Rule for inside the network that alows for shell access.
       SecurityGroups: 
         - !Ref 'InboundAccessSecurityGroup'
       KeyName: !Ref 'KeyName'
@@ -84,6 +94,12 @@ Resources:
         FromPort: 22
         ToPort: 22
         CidrIp: 0.0.0.0/0
+
+  #New group that isolates the bastion host from any communication within the VPC or public Internet.
+  IsolatedSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Group to isolate the bastion host from internal VPC/public internet"
 
 Outputs:
   InstanceId:
